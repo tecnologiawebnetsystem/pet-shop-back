@@ -1,0 +1,272 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id            Int           @id @default(autoincrement())
+  nome          String        @db.VarChar(100)
+  email         String        @unique @db.VarChar(100)
+  senha         String        @db.VarChar(255)
+  telefone      String?       @db.VarChar(20)
+  tipo          TipoUsuario
+  data_cadastro DateTime      @default(now())
+  ultimo_acesso DateTime?
+  status        StatusUsuario @default(ativo)
+  cliente       Cliente?
+  funcionario   Funcionario?
+
+  @@map("usuarios")
+}
+
+model Cliente {
+  id              Int            @id @default(autoincrement())
+  usuario_id      Int            @unique
+  usuario         Usuario        @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  cpf             String?        @unique @db.VarChar(14)
+  endereco        String?        @db.VarChar(255)
+  cidade          String?        @db.VarChar(100)
+  estado          String?        @db.VarChar(2)
+  cep             String?        @db.VarChar(9)
+  data_nascimento DateTime?
+  observacoes     String?        @db.Text
+  pets            Pet[]
+  agendamentos    Agendamento[]
+  vendas          Venda[]
+
+  @@map("clientes")
+}
+
+model Funcionario {
+  id               Int            @id @default(autoincrement())
+  usuario_id       Int            @unique
+  usuario          Usuario        @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  cargo            String?        @db.VarChar(100)
+  salario          Decimal?       @db.Decimal(10, 2)
+  data_contratacao DateTime?
+  documento        String?        @db.VarChar(20)
+  especialidade    String?        @db.VarChar(100)
+  agendamentos     Agendamento[]
+  vendas           Venda[]
+  tarefas          Tarefa[]
+
+  @@map("funcionarios")
+}
+
+model Pet {
+  id              Int           @id @default(autoincrement())
+  cliente_id      Int
+  cliente         Cliente       @relation(fields: [cliente_id], references: [id], onDelete: Cascade)
+  nome            String        @db.VarChar(100)
+  especie         String?       @db.VarChar(50)
+  raca            String?       @db.VarChar(100)
+  data_nascimento DateTime?
+  peso            Decimal?      @db.Decimal(5, 2)
+  sexo            SexoPet?
+  cor             String?       @db.VarChar(50)
+  observacoes     String?       @db.Text
+  foto            String?       @db.VarChar(255)
+  agendamentos    Agendamento[]
+
+  @@map("pets")
+}
+
+model CategoriaServico {
+  id        Int       @id @default(autoincrement())
+  nome      String    @db.VarChar(100)
+  descricao String?   @db.Text
+  servicos  Servico[]
+
+  @@map("categorias_servico")
+}
+
+model Servico {
+  id            Int              @id @default(autoincrement())
+  nome          String           @db.VarChar(100)
+  descricao     String?          @db.Text
+  preco         Decimal          @db.Decimal(10, 2)
+  duracao       Int?             // em minutos
+  categoria_id  Int?
+  categoria     CategoriaServico? @relation(fields: [categoria_id], references: [id])
+  status        StatusServico    @default(ativo)
+  agendamentos  Agendamento[]
+
+  @@map("servicos")
+}
+
+model Agendamento {
+  id             Int              @id @default(autoincrement())
+  cliente_id     Int
+  cliente        Cliente          @relation(fields: [cliente_id], references: [id])
+  pet_id         Int
+  pet            Pet              @relation(fields: [pet_id], references: [id])
+  servico_id     Int
+  servico        Servico          @relation(fields: [servico_id], references: [id])
+  funcionario_id Int?
+  funcionario    Funcionario?     @relation(fields: [funcionario_id], references: [id])
+  data           DateTime         @db.Date
+  hora_inicio    DateTime         @db.Time()
+  hora_fim       DateTime         @db.Time()
+  status         StatusAgendamento @default(agendado)
+  observacoes    String?          @db.Text
+
+  @@map("agendamentos")
+}
+
+model CategoriaProduto {
+  id        Int       @id @default(autoincrement())
+  nome      String    @db.VarChar(100)
+  descricao String?   @db.Text
+  produtos  Produto[]
+
+  @@map("categorias_produto")
+}
+
+model Fornecedor {
+  id       Int       @id @default(autoincrement())
+  nome     String    @db.VarChar(100)
+  cnpj     String?   @unique @db.VarChar(18)
+  telefone String?   @db.VarChar(20)
+  email    String?   @db.VarChar(100)
+  endereco String?   @db.VarChar(255)
+  cidade   String?   @db.VarChar(100)
+  estado   String?   @db.VarChar(2)
+  cep      String?   @db.VarChar(9)
+  contato  String?   @db.VarChar(100)
+  produtos Produto[]
+
+  @@map("fornecedores")
+}
+
+model Produto {
+  id             Int              @id @default(autoincrement())
+  nome           String           @db.VarChar(100)
+  descricao      String?          @db.Text
+  preco          Decimal          @db.Decimal(10, 2)
+  preco_custo    Decimal?         @db.Decimal(10, 2)
+  estoque        Int              @default(0)
+  estoque_minimo Int?             @default(0)
+  categoria_id   Int?
+  categoria      CategoriaProduto? @relation(fields: [categoria_id], references: [id])
+  fornecedor_id  Int?
+  fornecedor     Fornecedor?      @relation(fields: [fornecedor_id], references: [id])
+  codigo_barras  String?          @db.VarChar(50)
+  imagem         String?          @db.VarChar(255)
+  status         StatusProduto    @default(ativo)
+  itens_venda    ItemVenda[]
+
+  @@map("produtos")
+}
+
+model Venda {
+  id             Int           @id @default(autoincrement())
+  cliente_id     Int
+  cliente        Cliente       @relation(fields: [cliente_id], references: [id])
+  funcionario_id Int?
+  funcionario    Funcionario?  @relation(fields: [funcionario_id], references: [id])
+  data           DateTime      @default(now())
+  valor_total    Decimal       @db.Decimal(10, 2)
+  desconto       Decimal?      @db.Decimal(10, 2) @default(0)
+  forma_pagamento FormaPagamento
+  status         StatusVenda   @default(pendente)
+  observacoes    String?       @db.Text
+  itens          ItemVenda[]
+
+  @@map("vendas")
+}
+
+model ItemVenda {
+  id             Int      @id @default(autoincrement())
+  venda_id       Int
+  venda          Venda    @relation(fields: [venda_id], references: [id], onDelete: Cascade)
+  produto_id     Int
+  produto        Produto  @relation(fields: [produto_id], references: [id])
+  quantidade     Int
+  valor_unitario Decimal  @db.Decimal(10, 2)
+  desconto       Decimal? @db.Decimal(10, 2) @default(0)
+  valor_total    Decimal  @db.Decimal(10, 2)
+
+  @@map("itens_venda")
+}
+
+model Tarefa {
+  id             Int           @id @default(autoincrement())
+  funcionario_id Int?
+  funcionario    Funcionario?  @relation(fields: [funcionario_id], references: [id])
+  titulo         String        @db.VarChar(100)
+  descricao      String?       @db.Text
+  data           DateTime      @db.Date
+  hora           DateTime      @db.Time()
+  prioridade     Prioridade    @default(media)
+  status         StatusTarefa  @default(pendente)
+
+  @@map("tarefas")
+}
+
+enum TipoUsuario {
+  cliente
+  funcionario
+  admin
+}
+
+enum StatusUsuario {
+  ativo
+  inativo
+}
+
+enum SexoPet {
+  macho
+  femea
+}
+
+enum StatusServico {
+  ativo
+  inativo
+}
+
+enum StatusAgendamento {
+  agendado
+  confirmado
+  em_andamento
+  concluido
+  cancelado
+}
+
+enum StatusProduto {
+  ativo
+  inativo
+}
+
+enum FormaPagamento {
+  dinheiro
+  cartao_credito
+  cartao_debito
+  pix
+  boleto
+}
+
+enum StatusVenda {
+  pendente
+  concluida
+  cancelada
+}
+
+enum Prioridade {
+  baixa
+  media
+  alta
+}
+
+enum StatusTarefa {
+  pendente
+  em_andamento
+  concluida
+  cancelada
+}

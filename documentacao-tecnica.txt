@@ -1,0 +1,382 @@
+# DOCUMENTAÇÃO TÉCNICA - SISTEMA ERP PARA PETSHOP
+
+## 1. VISÃO GERAL DO SISTEMA
+
+O sistema ERP para Petshop é uma aplicação backend desenvolvida em Node.js que gerencia todas as operações de um petshop, incluindo cadastro de clientes e pets, agendamento de serviços, controle de estoque, vendas e gestão de funcionários.
+
+### 1.1 Tecnologias Utilizadas
+
+- **Node.js**: Ambiente de execução JavaScript
+- **Express**: Framework web para Node.js
+- **Prisma**: ORM para interação com banco de dados
+- **MySQL**: Sistema de gerenciamento de banco de dados relacional
+- **JWT**: Biblioteca para autenticação com tokens
+- **Bcrypt**: Biblioteca para hash de senhas
+- **Multer**: Middleware para upload de arquivos
+- **Nodemailer**: Biblioteca para envio de emails
+- **Joi**: Biblioteca para validação de dados
+- **Swagger**: Documentação da API
+- **Winston**: Biblioteca para logs
+- **Jest**: Framework para testes
+
+## 2. ARQUITETURA DO SISTEMA
+
+O sistema segue uma arquitetura em camadas, com separação clara de responsabilidades:
+
+### 2.1 Camadas
+
+1. **Controllers**: Responsáveis por receber as requisições HTTP, validar os dados de entrada e retornar as respostas.
+2. **Services**: Contêm a lógica de negócio da aplicação.
+3. **Repositories**: Responsáveis pela interação com o banco de dados.
+4. **Middlewares**: Interceptam as requisições para realizar tarefas como autenticação, validação e tratamento de erros.
+5. **Utils**: Funções utilitárias reutilizáveis.
+6. **Config**: Configurações do sistema.
+7. **Validations**: Esquemas de validação de dados.
+
+### 2.2 Fluxo de Dados
+
+1. O cliente faz uma requisição HTTP para a API.
+2. A requisição passa pelos middlewares de autenticação e validação.
+3. O controller recebe a requisição e chama o service apropriado.
+4. O service executa a lógica de negócio e utiliza o repository para acessar o banco de dados.
+5. O repository executa as operações no banco de dados e retorna os resultados para o service.
+6. O service processa os resultados e retorna para o controller.
+7. O controller formata a resposta e a envia para o cliente.
+
+## 3. BANCO DE DADOS
+
+O sistema utiliza o MySQL como banco de dados relacional, com o Prisma como ORM para facilitar a interação com o banco.
+
+### 3.1 Principais Entidades
+
+1. **Usuario**: Armazena informações de usuários do sistema (clientes, funcionários e administradores).
+2. **Cliente**: Informações específicas de clientes, relacionado com Usuario.
+3. **Funcionario**: Informações específicas de funcionários, relacionado com Usuario.
+4. **Pet**: Informações sobre os pets dos clientes.
+5. **CategoriaServico**: Categorias de serviços oferecidos.
+6. **Servico**: Serviços oferecidos pelo petshop.
+7. **Agendamento**: Agendamentos de serviços para pets.
+8. **CategoriaProduto**: Categorias de produtos vendidos.
+9. **Produto**: Produtos vendidos pelo petshop.
+10. **Fornecedor**: Fornecedores de produtos.
+11. **Venda**: Registro de vendas realizadas.
+12. **ItemVenda**: Itens incluídos em uma venda.
+13. **Tarefa**: Tarefas atribuídas aos funcionários.
+
+### 3.2 Relacionamentos
+
+- Um Usuario pode ser um Cliente ou um Funcionario (relação 1:1).
+- Um Cliente pode ter vários Pets (relação 1:N).
+- Um Cliente pode ter vários Agendamentos (relação 1:N).
+- Um Cliente pode ter várias Vendas (relação 1:N).
+- Um Pet pode ter vários Agendamentos (relação 1:N).
+- Uma CategoriaServico pode ter vários Servicos (relação 1:N).
+- Um Servico pode ter vários Agendamentos (relação 1:N).
+- Uma CategoriaProduto pode ter vários Produtos (relação 1:N).
+- Um Fornecedor pode ter vários Produtos (relação 1:N).
+- Um Produto pode estar em vários ItemVenda (relação 1:N).
+- Uma Venda pode ter vários ItemVenda (relação 1:N).
+- Um Funcionario pode ter vários Agendamentos (relação 1:N).
+- Um Funcionario pode ter várias Tarefas (relação 1:N).
+
+## 4. FUNCIONALIDADES DO SISTEMA
+
+### 4.1 Autenticação e Autorização
+
+- Login com email e senha
+- Geração de token JWT
+- Verificação de permissões baseada em perfil (cliente, funcionário, admin)
+- Recuperação de senha via email
+
+### 4.2 Gestão de Usuários
+
+- Cadastro de usuários (clientes, funcionários e administradores)
+- Atualização de dados pessoais
+- Alteração de senha
+- Inativação/ativação de usuários
+
+### 4.3 Gestão de Clientes
+
+- Cadastro de clientes com informações detalhadas
+- Visualização de histórico de agendamentos
+- Visualização de histórico de compras
+- Gestão de pets associados
+
+### 4.4 Gestão de Pets
+
+- Cadastro de pets com informações detalhadas
+- Upload de fotos
+- Histórico de atendimentos
+- Associação com cliente
+
+### 4.5 Gestão de Serviços
+
+- Cadastro de categorias de serviços
+- Cadastro de serviços com preço e duração
+- Ativação/inativação de serviços
+
+### 4.6 Agendamentos
+
+- Criação de agendamentos para serviços
+- Verificação de disponibilidade de horários
+- Confirmação por email
+- Atualização de status (agendado, confirmado, em andamento, concluído, cancelado)
+
+### 4.7 Gestão de Produtos
+
+- Cadastro de categorias de produtos
+- Cadastro de produtos com preço, estoque e fornecedor
+- Upload de imagens
+- Controle de estoque
+- Alerta de estoque mínimo
+
+### 4.8 Gestão de Fornecedores
+
+- Cadastro de fornecedores
+- Associação de produtos a fornecedores
+
+### 4.9 Vendas
+
+- Registro de vendas de produtos
+- Cálculo automático de valores
+- Atualização automática de estoque
+- Diferentes formas de pagamento
+- Envio de confirmação por email
+
+### 4.10 Tarefas
+
+- Criação de tarefas para funcionários
+- Priorização de tarefas
+- Acompanhamento de status
+
+## 5. ENDPOINTS DA API
+
+A API segue o padrão RESTful, com os seguintes endpoints principais:
+
+### 5.1 Autenticação
+
+- `POST /api/auth/login`: Autenticação de usuário
+- `POST /api/auth/forgot-password`: Solicitação de recuperação de senha
+- `POST /api/auth/reset-password`: Redefinição de senha
+
+### 5.2 Usuários
+
+- `GET /api/usuarios`: Listar todos os usuários
+- `GET /api/usuarios/{id}`: Obter usuário por ID
+- `POST /api/usuarios`: Criar novo usuário
+- `PUT /api/usuarios/{id}`: Atualizar usuário
+- `DELETE /api/usuarios/{id}`: Excluir usuário
+- `POST /api/usuarios/{id}/change-password`: Alterar senha
+
+### 5.3 Clientes
+
+- `GET /api/clientes`: Listar todos os clientes
+- `GET /api/clientes/{id}`: Obter cliente por ID
+- `POST /api/clientes`: Criar novo cliente
+- `PUT /api/clientes/{id}`: Atualizar cliente
+- `DELETE /api/clientes/{id}`: Excluir cliente
+- `GET /api/clientes/{id}/pets`: Listar pets do cliente
+- `GET /api/clientes/{id}/agendamentos`: Listar agendamentos do cliente
+- `GET /api/clientes/{id}/compras`: Listar compras do cliente
+
+### 5.4 Funcionários
+
+- `GET /api/funcionarios`: Listar todos os funcionários
+- `GET /api/funcionarios/{id}`: Obter funcionário por ID
+- `POST /api/funcionarios`: Criar novo funcionário
+- `PUT /api/funcionarios/{id}`: Atualizar funcionário
+- `DELETE /api/funcionarios/{id}`: Excluir funcionário
+- `GET /api/funcionarios/{id}/agendamentos`: Listar agendamentos do funcionário
+- `GET /api/funcionarios/{id}/tarefas`: Listar tarefas do funcionário
+
+### 5.5 Pets
+
+- `GET /api/pets`: Listar todos os pets
+- `GET /api/pets/{id}`: Obter pet por ID
+- `POST /api/pets`: Criar novo pet
+- `PUT /api/pets/{id}`: Atualizar pet
+- `DELETE /api/pets/{id}`: Excluir pet
+- `POST /api/pets/{id}/foto`: Upload de foto do pet
+- `GET /api/pets/{id}/agendamentos`: Listar agendamentos do pet
+
+### 5.6 Categorias de Serviço
+
+- `GET /api/categorias-servico`: Listar todas as categorias de serviço
+- `GET /api/categorias-servico/{id}`: Obter categoria de serviço por ID
+- `POST /api/categorias-servico`: Criar nova categoria de serviço
+- `PUT /api/categorias-servico/{id}`: Atualizar categoria de serviço
+- `DELETE /api/categorias-servico/{id}`: Excluir categoria de serviço
+- `GET /api/categorias-servico/{id}/servicos`: Listar serviços da categoria
+
+### 5.7 Serviços
+
+- `GET /api/servicos`: Listar todos os serviços
+- `GET /api/servicos/{id}`: Obter serviço por ID
+- `POST /api/servicos`: Criar novo serviço
+- `PUT /api/servicos/{id}`: Atualizar serviço
+- `DELETE /api/servicos/{id}`: Excluir serviço
+- `GET /api/servicos/{id}/agendamentos`: Listar agendamentos do serviço
+
+### 5.8 Agendamentos
+
+- `GET /api/agendamentos`: Listar todos os agendamentos
+- `GET /api/agendamentos/{id}`: Obter agendamento por ID
+- `POST /api/agendamentos`: Criar novo agendamento
+- `PUT /api/agendamentos/{id}`: Atualizar agendamento
+- `DELETE /api/agendamentos/{id}`: Excluir agendamento
+
+### 5.9 Categorias de Produto
+
+- `GET /api/categorias-produto`: Listar todas as categorias de produto
+- `GET /api/categorias-produto/{id}`: Obter categoria de produto por ID
+- `POST /api/categorias-produto`: Criar nova categoria de produto
+- `PUT /api/categorias-produto/{id}`: Atualizar categoria de produto
+- `DELETE /api/categorias-produto/{id}`: Excluir categoria de produto
+- `GET /api/categorias-produto/{id}/produtos`: Listar produtos da categoria
+
+### 5.10 Fornecedores
+
+- `GET /api/fornecedores`: Listar todos os fornecedores
+- `GET /api/fornecedores/{id}`: Obter fornecedor por ID
+- `POST /api/fornecedores`: Criar novo fornecedor
+- `PUT /api/fornecedores/{id}`: Atualizar fornecedor
+- `DELETE /api/fornecedores/{id}`: Excluir fornecedor
+- `GET /api/fornecedores/{id}/produtos`: Listar produtos do fornecedor
+
+### 5.11 Produtos
+
+- `GET /api/produtos`: Listar todos os produtos
+- `GET /api/produtos/{id}`: Obter produto por ID
+- `POST /api/produtos`: Criar novo produto
+- `PUT /api/produtos/{id}`: Atualizar produto
+- `DELETE /api/produtos/{id}`: Excluir produto
+- `POST /api/produtos/{id}/imagem`: Upload de imagem do produto
+- `POST /api/produtos/{id}/estoque`: Atualizar estoque do produto
+
+### 5.12 Vendas
+
+- `GET /api/vendas`: Listar todas as vendas
+- `GET /api/vendas/{id}`: Obter venda por ID
+- `POST /api/vendas`: Criar nova venda
+- `PUT /api/vendas/{id}`: Atualizar venda
+- `DELETE /api/vendas/{id}`: Excluir venda
+
+### 5.13 Itens de Venda
+
+- `GET /api/itens-venda`: Listar todos os itens de venda
+- `GET /api/itens-venda/{id}`: Obter item de venda por ID
+- `POST /api/itens-venda`: Criar novo item de venda
+- `PUT /api/itens-venda/{id}`: Atualizar item de venda
+- `DELETE /api/itens-venda/{id}`: Excluir item de venda
+
+### 5.14 Tarefas
+
+- `GET /api/tarefas`: Listar todas as tarefas
+- `GET /api/tarefas/{id}`: Obter tarefa por ID
+- `POST /api/tarefas`: Criar nova tarefa
+- `PUT /api/tarefas/{id}`: Atualizar tarefa
+- `DELETE /api/tarefas/{id}`: Excluir tarefa
+
+## 6. SEGURANÇA
+
+### 6.1 Autenticação
+
+- Utilização de tokens JWT para autenticação
+- Tokens com tempo de expiração
+- Armazenamento seguro de senhas com bcrypt
+
+### 6.2 Autorização
+
+- Controle de acesso baseado em perfis (cliente, funcionário, admin)
+- Verificação de permissões em cada endpoint
+
+### 6.3 Validação de Dados
+
+- Validação de todos os dados de entrada com Joi
+- Sanitização de dados para prevenir injeção de SQL
+- Tratamento adequado de erros
+
+### 6.4 Proteção contra Ataques
+
+- Utilização do Helmet para proteção contra ataques comuns
+- Rate limiting para prevenir ataques de força bruta
+- CORS configurado para permitir apenas origens confiáveis
+
+## 7. LOGS E MONITORAMENTO
+
+- Logs detalhados com Winston
+- Diferentes níveis de log (error, warn, info, debug)
+- Rotação de arquivos de log
+- Monitoramento de saúde da aplicação via endpoint `/health`
+
+## 8. TESTES
+
+### 8.1 Testes Unitários
+
+- Testes de funções isoladas
+- Mocking de dependências externas
+
+### 8.2 Testes de Integração
+
+- Testes de fluxos completos
+- Verificação de interações entre componentes
+
+### 8.3 Testes de API
+
+- Testes de endpoints com Supertest
+- Verificação de respostas HTTP
+
+## 9. IMPLANTAÇÃO
+
+### 9.1 Ambiente de Desenvolvimento
+
+- Configuração para desenvolvimento local
+- Variáveis de ambiente para desenvolvimento
+
+### 9.2 Ambiente de Produção
+
+- Configuração otimizada para produção
+- Variáveis de ambiente para produção
+
+### 9.3 Docker
+
+- Containerização da aplicação
+- Docker Compose para orquestração de serviços
+
+## 10. REQUISITOS DO SISTEMA
+
+### 10.1 Hardware
+
+- Processador: 2 cores ou superior
+- Memória RAM: 2GB ou superior
+- Armazenamento: 10GB ou superior
+
+### 10.2 Software
+
+- Node.js 18.x ou superior
+- MySQL 8.0 ou superior
+- Docker (opcional)
+
+## 11. VARIÁVEIS DE AMBIENTE
+
+- `NODE_ENV`: Ambiente de execução (development, production)
+- `PORT`: Porta do servidor
+- `DATABASE_URL`: URL de conexão com o banco de dados
+- `JWT_SECRET`: Chave secreta para geração de tokens JWT
+- `JWT_EXPIRES_IN`: Tempo de expiração dos tokens JWT
+- `EMAIL_HOST`: Host do servidor de email
+- `EMAIL_PORT`: Porta do servidor de email
+- `EMAIL_USER`: Usuário do servidor de email
+- `EMAIL_PASS`: Senha do servidor de email
+- `EMAIL_FROM`: Email de origem para envio de emails
+- `UPLOAD_FOLDER`: Pasta para upload de arquivos
+- `MAX_FILE_SIZE`: Tamanho máximo de arquivos para upload
+- `FRONTEND_URL`: URL do frontend para links em emails
+
+## 12. CONSIDERAÇÕES FINAIS
+
+Este sistema foi desenvolvido seguindo as melhores práticas de desenvolvimento de software, com foco em segurança, escalabilidade e manutenibilidade. A arquitetura em camadas facilita a evolução do sistema e a adição de novas funcionalidades.
+
+A documentação da API está disponível através do Swagger, acessível pelo endpoint `/api-docs` quando o servidor está em execução.
+
+Para iniciar o desenvolvimento, siga as instruções no arquivo README.md na raiz do projeto.

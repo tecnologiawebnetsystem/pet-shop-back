@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: petshop-erp-api
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
+    depends_on:
+      - db
+    networks:
+      - petshop-network
+
+  db:
+    image: mysql:8.0
+    container_name: petshop-erp-db
+    restart: unless-stopped
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD:-root}
+      - MYSQL_DATABASE=${DB_DATABASE:-petshop_erp}
+      - MYSQL_USER=${DB_USER:-petshop}
+      - MYSQL_PASSWORD=${DB_PASSWORD:-petshop}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - petshop-network
+
+networks:
+  petshop-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
